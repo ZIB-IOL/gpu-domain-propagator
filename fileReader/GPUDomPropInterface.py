@@ -99,7 +99,7 @@ def propagateGPUAtomic(
         lbs: List[float],
         ubs: List[float],
         vartypes: List[int],
-        fullAsync = True,
+        synctype: int = 0,
         datatype = c_double
 ) -> Tuple[List[float]]:
     C = CDLL(so_file)
@@ -118,7 +118,7 @@ def propagateGPUAtomic(
     c_lbs = (datatype * n_vars)(*lbs)
     c_ubs = (datatype * n_vars)(*ubs)
     c_vartypes = (c_int * n_vars)(*vartypes)
-    c_fullAsync = (c_bool)(fullAsync)
+    c_synctype = (c_int)(synctype)
 
     if datatype == c_double:
         fun = C.propagateConstraintsGPUAtomicDouble
@@ -139,7 +139,7 @@ def propagateGPUAtomic(
         c_lbs,
         c_ubs,
         c_vartypes,
-        c_fullAsync
+        c_synctype
     )
 
     return list(c_lbs), list(c_ubs)
@@ -260,6 +260,7 @@ def propagateSequentialWithPapiloPostsolve(
         lbs: List[float],
         ubs: List[float],
         vartypes: List[int],
+        papilo_path: str,
         datatype = c_double
 ):
     (seq_new_lbs, seq_new_ubs) = propagateSequential(n_vars, n_cons, nnz, csr_col_indices, csr_row_ptrs, csr_vals, lhss, rhss,
@@ -268,7 +269,7 @@ def propagateSequentialWithPapiloPostsolve(
 
     gdp_solved_instance_path = reader.write_model_with_new_bounds(seq_new_lbs, seq_new_ubs)
 
-    papilo = PapiloInterface("/home/bzfsofra/papilo", gdp_solved_instance_path + ".mps.gz")
+    papilo = PapiloInterface(gdp_solved_instance_path + ".mps.gz", papilo_path)
     stdout = papilo.run_papilo()
     lbs, ubs = papilo.get_presolved_bounds()
     postsolve_bd_chgs = papilo.get_num_bound_changes()

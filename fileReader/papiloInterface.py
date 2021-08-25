@@ -8,15 +8,18 @@ from regexes import *
 from readerInterface import FileReaderInterface, get_reader
 
 
-def propagatePapilo(input_file_path: str):
-    papilo = PapiloInterface("/home/bzfsofra/papilo", input_file_path)
+
+
+def propagatePapilo(input_file_path: str, papilo_path: str):
+    papilo = PapiloInterface(input_file_path, papilo_path)
     stdout = papilo.run_papilo()
     lbs, ubs = papilo.get_presolved_bounds()
     return lbs, ubs, stdout
 
 
 class PapiloInterface():
-    def __init__(self, papilo_path: str, input_file: str):
+
+    def __init__(self, input_file: str, papilo_path: str):
         self.input_file = input_file
         _, instance_name = os.path.split(input_file)
         self.instance_name = instance_name
@@ -48,8 +51,7 @@ class PapiloInterface():
             self.num_rounds = get_regex_result(papilo_results_pattern, p.stdout, "rounds")
             self.exec_time = get_regex_result(papilo_success_pattern, p.stdout, "time")
         else:
-            print(p.stdout)
-            raise Exception("papilo run failed. Output:\n")
+            raise Exception("papilo run failed:\n", p.stdout)
 
         self.output = p.stdout
         return p.stdout
