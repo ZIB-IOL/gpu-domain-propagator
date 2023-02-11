@@ -7,7 +7,7 @@ from scipy import interpolate
 from typing import Dict, List
 
 from utils import EPSGE, EPSLE, check_monotonic_increase, get_slope, EPSEQ, EPSGT, EPSLT, \
-    num_instances_with_numerics_tag_in_miplib
+    num_instances_with_numerics_tag_in_miplib, instances_with_numerics_tab
 from regexes import *
 from plotter.plot_results import geo_mean_overflow
 
@@ -37,6 +37,8 @@ class RunData():
         self.cpu_data = {0: {"score": 0.0, "k": 0, "n":0, "timestamp": 0}}
         self.gpu_data = {0: {"score": 0.0, "k": 0, "n":0, "timestamp": 0}}
         self.cpu_num_rounds = 0
+        self.cpu_end_time = 0
+        self.weakest_bound_end_time = 0
         self.gpu_num_rounds = 0
         self.max_k = 0
 
@@ -254,6 +256,15 @@ class RunData():
 def get_run_object(output: str) -> RunData:
     runData = RunData()
     runData.prob_name = get_regex_result(prob_name_pattern, output, "prob_file")
+
+    cpu_wihtout_measure = get_regex_result(without_measure_output_pattern("cpu_seq"), output)
+    cpu_runtime = get_regex_result("(?s)cpu_seq propagation done. Num rounds:(.*?)====   end cpu_seq without measure  ====", cpu_wihtout_measure)
+    runData.cpu_end_time = int(get_regex_result("cpu_seq execution time : (?P<t>\d+) nanoseconds", cpu_runtime, 't'))
+
+    cpu_output = get_regex_result("(?s)=== cpu_seq execution with measure of progress ===(.*)=== gpu_atomic execution with measure of progress ===", output)
+    preprocessor_output = get_regex_result("(?s)====   Running the preprocessor  ====(.*?)====   end preprocessor  ====", cpu_output)
+    runData.weakest_bound_end_time = int(get_regex_result("cpu_seq_dis execution time : (?P<t>\d+) nanoseconds", preprocessor_output, "t"))
+
     for alg in ["cpu_seq", "gpu_atomic"]:
         with_measure_output = get_regex_result(with_measure_output_pattern(alg), output)
         without_measure_output = get_regex_result(without_measure_output_pattern(alg), output)
@@ -277,6 +288,10 @@ def get_run_object(output: str) -> RunData:
             runData.add_round(alg, prop_round, score, k, n, timestamp)
     return runData
 
+def wb_to_dp_runtime(instances_output):
+    objects = list(map(lambda x: get_run_object(x), instances_output))
+    speedups = list(map(lambda x: float(x.cpu_end_time) / x.weakest_bound_end_time, objects))
+    print("geo mean speedup WB over DP: ", geo_mean_overflow(speedups), "Num instances in the test set: ", len(speedups))
 
 def parse_results_progress_run(results_file):
     def no_max_rounds(instance_output):
@@ -317,6 +332,12 @@ def parse_results_progress_run(results_file):
     #non_matching = list(filter(lambda output: get_regex_result(seq_to_ato_pattern, output, 'match') == "False", instances_output))
     #non_matching = list(map(lambda output: get_regex_result(prob_name_pattern, output, "prob_file").split("/")[-1], non_matching))
     #num_instances_with_numerics_tag_in_miplib(non_matching)
+    remove_numerics_tag = False
+    if remove_numerics_tag:
+        numerics_instances = instances_with_numerics_tab()
+        print("number of instances in MIPLIB with numerics tab: ", len(numerics_instances))
+        instances_output = list(filter(lambda output: get_regex_result(prob_name_pattern, output, "prob_file").split("/")[-1] not in numerics_instances, instances_output))
+        print("num instances after removing those with numerics tag: ", len(instances_output))
 
     # remove instances with non-mathcing results
     instances_output = list(filter(lambda output: get_regex_result(seq_to_ato_pattern, output, 'match') == "True", instances_output))
@@ -332,6 +353,8 @@ def parse_results_progress_run(results_file):
     rem = ["momentum1", "neos-4335793-snake", 'neos-5273874-yomtsa', 'ns2034125']
     instances_output = list(filter(lambda output: get_regex_result(prob_name_pattern, output, "prob_file").split("/")[-1] not in rem, instances_output))
     print("num instances after manual removal (numerical difficulties): ", len(instances_output))
+
+    wb_to_dp_runtime(instances_output)
 
     # FINITE PROGRESS
     finite_run_data_objects = list(map(lambda x: get_run_object(x), instances_output))
