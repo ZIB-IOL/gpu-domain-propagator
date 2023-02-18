@@ -1,0 +1,36 @@
+% citation for the paper which presented the GPU domain propagation algorithm.
+@article{sofranacetal2022gpudomprop,
+	title = {Accelerating domain propagation: An efficient GPU-parallel algorithm over sparse matrices},
+	journal = {Parallel Computing},
+	volume = {109},
+	pages = {102874},
+	year = {2022},
+	issn = {0167-8191},
+	doi = {https://doi.org/10.1016/j.parco.2021.102874},
+	url = {https://www.sciencedirect.com/science/article/pii/S0167819121001149},
+	author = {Boro Sofranac and Ambros Gleixner and Sebastian Pokutta},
+	keywords = {Mixed integer linear programming, MIP, GPU, Domain propagation, Bound tightening, Parallel algorithms}
+}
+
+
+% citation for the paper on the measure of progress of propagation algorithms
+@article{sofranacetal2022progressmeasure,
+	abstract = {Propagation of linear constraints has become a crucial sub-routine in modern Mixed-Integer Programming (MIP) solvers. In practice, iterative algorithms with tolerance-based stopping criteria are used to avoid problems with slow or infinite convergence. However, these heuristic stopping criteria can pose difficulties for fairly comparing the efficiency of different implementations of iterative propagation algorithms in a real-world setting. Most significantly, the presence of unbounded variable domains in the problem formulation makes it difficult to quantify the relative size of reductions performed on them. In this work, we develop a method to measure---independently of the algorithmic design---the progress that a given iterative propagation procedure has made at a given point in time during its execution. Our measure makes it possible to study and better compare the behavior of bounds propagation algorithms for linear constraints. We apply the new measure to answer two questions of practical relevance: (i) We investigate to what extent heuristic stopping criteria can lead to premature termination on real-world MIP instances. (ii) We compare a GPU-parallel propagation algorithm against a sequential state-of-the-art implementation and show that the parallel version is even more competitive in a real-world setting than originally reported.},
+	author = {Sofranac, Boro and Gleixner, Ambros and Pokutta, Sebastian},
+	date = {2022/12/01},
+	date-added = {2023-02-18 15:54:19 +0100},
+	date-modified = {2023-02-18 15:54:19 +0100},
+	doi = {10.1007/s10601-022-09338-9},
+	id = {Sofranac2022},
+	isbn = {1572-9354},
+	journal = {Constraints},
+	number = {4},
+	pages = {432--455},
+	title = {An algorithm-independent measure of progress for linear constraint propagation},
+	url = {https://doi.org/10.1007/s10601-022-09338-9},
+	volume = {27},
+	year = {2022},
+	bdsk-url-1 = {https://doi.org/10.1007/s10601-022-09338-9}
+}
+
+
